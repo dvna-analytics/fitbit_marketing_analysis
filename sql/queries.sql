@@ -3,16 +3,14 @@
 -----------------------------------------
 -- Total interactions, impressions, clicks, conversions, revenue
 SELECT
-	COUNT(*) AS total_interactions,
-	SUM(Impressions) AS total_impressions,
+	COUNT(*) AS total_exposures,
 	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
 	SUM(Conversions) AS total_conversions,
-	SUM(ConversionValue) AS total_revenue
-FROM
-	fitbit_ads;
--- Average conversion rate
-SELECT
-	ROUND((SUM(Conversions)::DECIMAL / NULLIF(SUM(Clicks),0)*100),2) AS conversion_rate
+	ROUND((SUM(Conversions)::DECIMAL / NULLIF(SUM(Clicks),0)*100),2) AS conversion_rate,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM
 	fitbit_ads;
 
@@ -22,9 +20,13 @@ FROM
 -- Identify which ad platform has the highest click-through rate (CTR)
 SELECT
 	AdPlatform,
+	COUNT(*) AS total_exposures,
 	SUM(Clicks) AS total_clicks,
 	SUM(Impressions) AS total_impressions,
-	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM
 	fitbit_ads
 GROUP BY
@@ -38,6 +40,10 @@ ORDER BY
 -- Which products are the most profitable
 SELECT
 	ProductCategory,
+	COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
 	SUM(Conversions) AS total_conversions,
 	SUM(ConversionValue) AS total_revenue,
 	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
@@ -47,6 +53,18 @@ GROUP BY
 	ProductCategory
 ORDER BY
 	revenue_per_impression DESC;
+-- How do the products rank in terms of ROI each month
+SELECT
+	ProductCategory,
+	TO_CHAR(datetime, 'Month') AS month,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
+FROM
+	fitbit_ads
+GROUP BY
+	ProductCategory,
+	month
+ORDER BY
+	month;
 
 -----------------------------------------
 -- 4. Campaign Performance
@@ -54,43 +72,55 @@ ORDER BY
 -- Compare campaigns by revenue and conversions
 SELECT 
     CampaignID,
-    SUM(Clicks) AS total_clicks,
-    SUM(Conversions) AS total_conversions,
-    SUM(ConversionValue) AS revenue,
-    ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Clicks),0),2) AS revenue_per_click
+	COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM 
 	fitbit_ads
 GROUP BY 
 	CampaignID
 ORDER BY 
-	revenue DESC;
+	total_revenue DESC;
 
 -----------------------------------------
 -- 5. Demographics Insights
 -----------------------------------------
--- Which age groups and genders are most responsive
+-- How are age group-gender combinations performing in terms of total revenue (volume), revenue per impression/return on advtertising spend (ROAS), and conversion rate (CVR).
 SELECT 
     AgeGroup,
     Gender,
-    SUM(Clicks) AS total_clicks,
-    SUM(Conversions) AS total_conversions,
-    ROUND(SUM(Conversions)::DECIMAL / NULLIF(SUM(Clicks),0)*100,2) AS conversion_rate_percent
+	COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM 
 	fitbit_ads
 GROUP BY 
 	AgeGroup, 
 	Gender
 ORDER BY 
-	conversion_rate_percent DESC;
+	total_revenue DESC;
 
 -----------------------------------------
 -- 6. Geography Analysis
 -----------------------------------------
--- Top countries by revenue
+-- How are countries performing in terms of total revenue (volume), revenue per impression/return on advtertising spend (ROAS), and conversion rate (CVR).
 SELECT 
     Country,
-    SUM(Conversions) AS total_conversions,
-    SUM(ConversionValue) AS total_revenue
+	COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM 
 	fitbit_ads
 GROUP BY 
@@ -103,26 +133,29 @@ WITH country_ad_ranks AS (
 		Country,
 		CampaignID,
 		AdPlatform,
+		COUNT(*) AS total_exposures,
+		SUM(Clicks) AS total_clicks,
+		SUM(Impressions) AS total_impressions,
+		ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
 		SUM(Conversions) AS total_conversions,
-	    SUM(ConversionValue) AS total_revenue,
-	    ROW_NUMBER() OVER(PARTITION BY Country ORDER BY SUM(ConversionValue) DESC) AS ad_rank
+		SUM(ConversionValue) AS total_revenue,
+		ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression,
+		ROW_NUMBER() OVER (PARTITION BY Country ORDER BY SUM(ConversionValue) DESC) AS ad_rank
 	FROM
 		fitbit_ads
 	GROUP BY
 		Country,
 		CampaignID,
 		AdPlatform
-	ORDER BY 
-		total_revenue DESC
 )
 SELECT
 	*
 FROM
 	country_ad_ranks
 WHERE 
-	ad_rank = 1;
-
-
+	ad_rank = 1
+ORDER BY
+	total_revenue DESC;
 
 -----------------------------------------
 -- 7. Time-Based Trends
@@ -130,15 +163,19 @@ WHERE
 -- What time of the day are users most active?
 SELECT 
     EXTRACT(HOUR FROM DateTime) AS hour,
-    SUM(Clicks) AS total_clicks,
-    SUM(Conversions) AS total_conversions,
-    ROUND(SUM(Conversions)::DECIMAL / NULLIF(SUM(Clicks),0)*100,2) AS conversion_rate_percent
+	COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM 
 	fitbit_ads
 GROUP BY 
 	hour
 ORDER BY 
-	conversion_rate_percent ASC;
+	total_revenue DESC;
 -- What day of the week are users most active?
 SELECT 
     CASE 
@@ -150,9 +187,13 @@ SELECT
     	WHEN EXTRACT(DOW FROM DateTime) = 5 THEN '6. Friday'
     	ELSE '7. Saturday' 
     END AS day_of_week,
-    SUM(Clicks) AS total_clicks,
-    SUM(Conversions) AS total_conversions,
-	ROUND(SUM(Conversions)::DECIMAL / NULLIF(SUM(Clicks),0)*100,2) AS conversion_rate_percent
+    COUNT(*) AS total_exposures,
+	SUM(Clicks) AS total_clicks,
+	SUM(Impressions) AS total_impressions,
+	ROUND((SUM(Clicks)::DECIMAL / NULLIF(SUM(Impressions),0)*100),2) AS CTR_percent,
+	SUM(Conversions) AS total_conversions,
+	SUM(ConversionValue) AS total_revenue,
+	ROUND(SUM(ConversionValue)::DECIMAL / NULLIF(SUM(Impressions),0),2) AS revenue_per_impression
 FROM 
 	fitbit_ads
 GROUP BY 
