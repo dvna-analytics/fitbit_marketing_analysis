@@ -1,7 +1,7 @@
-country,total_conversions,total_revenue
-Canada,271,76372.00
-Germany,247,72620.00
-Australia,256,68373.00
-UK,238,66781.00
-USA,253,66447.00
-France,231,60451.00
+country,total_exposures,total_clicks,total_impressions,ctr_percent,total_conversions,conversion_rate,total_revenue,revenue_per_impression
+Canada,1634,840,8155,10.30,271,32.26,76372.00,9.37
+Germany,1656,810,8358,9.69,247,30.49,72620.00,8.69
+Australia,1600,822,7880,10.43,256,31.14,68373.00,8.68
+UK,1539,818,7767,10.53,238,29.10,66781.00,8.60
+USA,1524,785,7730,10.16,253,32.23,66447.00,8.60
+France,1547,755,7884,9.58,231,30.60,60451.00,7.67
