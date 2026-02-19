@@ -4,7 +4,9 @@
 
 This project analyzes a sample marketing dataset from Fitbit to uncover insights about **ad performance, demographics, engagement, and conversion efficiency**. The goal is to demonstrate SQL-based data modeling, aggregation, and performance analysis techniques, along with business-oriented interpreation of marketing performance metrics.
 
-**Dataset:** `FitBitMarketing.csv` (9,500 rows, 12 columns)
+**Dataset:** `FitBitMarketing.csv` (9,500 rows, 12 columns)  
+Source: [Kaggle - FitBit Marketing Dataset](https://www.kaggle.com/datasets/mvinee7/fitbitmarketing/data)  
+  
 > **Note:** This dataset is publicly available and used for educational and demonstration purposes.
 
 **Key columns:**
