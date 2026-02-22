@@ -1,5 +1,18 @@
 # fitbit_marketing_analysis
 
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Executive Summary](#executive-summary)
+- [Project Structure](#project-structure)
+- [Setup Instructions](#setup-instructions)
+- [Key Analyses](#key-analyses)
+  - [Dataset Overview](#1-dataset-overview)
+  - [Engagement by Platform](#2-engagement-by-platform)
+  - [Revenue / ROI by Product Category](#3-revenue--roi-by-product-category)
+  - [Geography Insights](#4-geography-insights)
+  - [Time-Based Trends](#5-time-based-trends)
+  - [Statistical Validation of Segment Performance (Chi-Square Test)](#6-statistical-validation-of-segment-performance)
+
 ## Project Overview
 
 This project analyzes a sample marketing dataset from Fitbit to uncover insights about **ad performance, demographics, engagement, and conversion efficiency**. The goal is to demonstrate SQL-based data modeling, aggregation, and performance analysis techniques, along with business-oriented interpreation of marketing performance metrics.
@@ -143,7 +156,7 @@ To compare engagement performance across channels, I calculated total clicks, im
 
 >**Key Insight:**  *Google and Facebook drive the highest engagement (CTR ~10.3%), indicating stronger audience-platform alignment. Instagram and Twitter trail slightly, suggesting potential opportunity for creative or targeting optimization.*
 
-### **3. Revenue / ROI by Product Category**
+### 3. Revenue / ROI by Product Category
 **Objective:** Compare product categories across both revenue volume and revenue efficiency to identify high-performing and scalable segments.  
 
 ```sql
@@ -163,7 +176,7 @@ ORDER BY
 
 >**Key Insight:** *Accessories generate the highest revenue per impression, indicating strong monetization efficiency. However, Smartphones lead in total revenue and conversions, indicating higher volume. The relatively small efficiency gap across categories suggests a balanced portfolio rather than dramatic performance divergence.*
 
-### **4. Geography Insights**
+### 4. Geography Insights
 **Objective:** Evaluate geographic performance by comparing revenue volume and revenue efficiency (revenue per impression) across countries.  
   
 ```sql
@@ -188,7 +201,7 @@ ORDER BY
 > This suggests that the revenue gap across these markets is primarily driven by scale (impressions) rather than performance quality.  
 > France underperforms on CTR and revenue per impression, suggesting potential targeting or messaging inefficiencies relative to other markets.*
 
-### **5. Time-Based Trends**
+### 5. Time-Based Trends
 **Objective:** Identify temporal patterns in user engagement and conversion efficiency to inform campaign scheduling and budget allocation.  
 ```sql
 SELECT 
@@ -216,3 +229,48 @@ ORDER BY
 > **Key Insight:** *Conversion rates peak on Tuesday (32.82%) and Saturday (32.28%), while click volume is fairly consistent across the week, suggesting that user intent spikes midweek and on weekends even when engagement levels are similar.*
 
 > **Business Implication:** Increasing bid intensity or budget allocation on high-efficiency days may improve overall ROI without increasing traffic volume.  
+
+### 6. Statistical Validation of Segment Performance
+**Objective:** While descriptive analysis highlighted small differences in conversion rates across segments (e.g., day of week, country, and ad platform), we evaluated whether these differences are statistically significant or attributable to sampling variation.  
+  
+---
+
+**Methodology:** A **Chi-Square Test of Independence** was conducted to assess whether conversion outcome (conversion vs. non-conversion) is associated with:  
+* Day of Week
+* Country
+* Ad Platform
+For each segment, a contingency table was constructed using total conversions and non-conversions (clicks minus conversions).
+
+All tests were conducted at a significance level of &alpha; = 0.05.  
+Test assumptions were validated (all expected counts > 5).
+
+---
+
+**Results**
+| Segment | χ2 | Degrees of Feedom | p-value | Conclusion 
+|---|---|---|---|---| 
+|Ad Platform| 0.33 | 3 | 0.95 | No dependence 
+|Country| 2.73 | 5 | 0.74 | No dependence 
+|Day of Week| 2.87 | 6 | 0.83 | No dependence  
+
+Across all tested segments, p-values exceeded 0.05, and we failed to reject the null hypothesis in each case.
+
+---
+
+**Interpretation:** Although descriptive metrics suggested minor differences in conversion efficiency across segments, inferential testing indicates that these variations are consistenct with normal sampling noise.  
+
+There is no statistical evidence that conversion outcome is dependent on day of week, country, or ad platform.
+
+---
+
+**Business Implication**  
+Based on this analysis:  
+* There is insufficient evidence to justify reallocating budget across days, countries, or platforms purely on observed conversion rate differences.
+* Performance variation appears driven by scale rather than statisticaly meaningful gaps.
+* Any optimization decisions across these segments should be validated through controlled experimentation rather than observational differences alone.
+
+---
+
+**Notebook Reference**  
+Full statistical testing implementation is available in `notebooks/chi_square_segment_tests.ipynb`.
+
